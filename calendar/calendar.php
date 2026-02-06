@@ -7,7 +7,7 @@ Author: Kieran O'Shea
 Author URI: http://www.kieranoshea.com
 Text Domain: calendar
 Domain Path: /languages
-Version: 1.3.16
+Version: 1.3.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 */
@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // Enable internationalisation
 function calendar_load_text_domain() {
     $plugin_dir = plugin_basename(dirname(__FILE__));
-    load_plugin_textdomain('calendar', false, $plugin_dir . '/languages');
+    load_plugin_textdomain('calendar', false, $plugin_dir . '/languages'); // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
 }
 add_action('plugins_loaded', 'calendar_load_text_domain');
 
@@ -278,7 +278,7 @@ function calendar_check()
   // then it is upgraded.
 
   // Lets see if this is first run and create us a table if it is!
-  global $initial_style;
+  global $calendar_initial_style;
 
   // Version info
   $calendar_version_option = 'calendar_version';
@@ -286,7 +286,7 @@ function calendar_check()
 
   // All this style info will go into the database on a new install
   // This looks nice in the TwentyTen theme
-  $initial_style = "    .calnk a:hover {
+  $calendar_initial_style = "    .calnk a:hover {
         background-position:0 0;
         text-decoration:none;  
         color:#000000;
@@ -529,7 +529,7 @@ function calendar_check()
           calendar_create_calendar_table();
           calendar_create_calendar_config_table();
           calendar_insert_config_value('can_manage_events','edit_posts');
-          calendar_insert_config_value('calendar_style',$initial_style);
+          calendar_insert_config_value('calendar_style',$calendar_initial_style);
           calendar_insert_config_value('display_author','false');
           calendar_insert_config_value('display_jump','false');
           calendar_insert_config_value('display_todays','true');
@@ -542,7 +542,7 @@ function calendar_check()
           calendar_add_author_and_description_to_calendar_table();
           calendar_create_calendar_config_table();
           calendar_insert_config_value('can_manage_events','edit_posts');
-          calendar_insert_config_value('calendar_style',$initial_style);
+          calendar_insert_config_value('calendar_style',$calendar_initial_style);
           calendar_insert_config_value('display_author','false');
           calendar_insert_config_value('display_jump','false');
           calendar_insert_config_value('display_todays','true');
@@ -557,7 +557,7 @@ function calendar_check()
           calendar_insert_config_value('enable_categories','false');
           calendar_add_link_and_category_to_calendar_table();
           calendar_create_calendar_categories();
-          calendar_update_config_value('calendar_style',$initial_style);
+          calendar_update_config_value('calendar_style',$calendar_initial_style);
       }
       // We've installed/upgraded now, just need to ensure the correct charsets
       calendar_db_set_charset_for_table(WP_CALENDAR_TABLE);
@@ -655,7 +655,7 @@ function calendar_events_display_list(){
 // The event edit form for the manage events admin page
 function calendar_events_edit_form($mode='add', $event_id=false)
 {
-	global $users_entries;
+	global $calendar_users_entries;
 	$data = false;
 	
 	if ( $event_id !== false )
@@ -676,15 +676,15 @@ function calendar_events_edit_form($mode='add', $event_id=false)
 			$data = $data[0];
 		}
 		// Recover users entries if they exist; in other words if editing an event went wrong
-		if (!empty($users_entries))
+		if (!empty($calendar_users_entries))
 		  {
-		    $data = $users_entries;
+		    $data = $calendar_users_entries;
 		  }
 	}
 	// Deal with possibility that form was submitted but not saved due to error - recover user's entries here
 	else
 	  {
-	    $data = $users_entries;
+	    $data = $calendar_users_entries;
 	  }
 	
 	?>
@@ -859,11 +859,11 @@ function calendar_events_edit_form($mode='add', $event_id=false)
 					  <?php esc_html_e('Repeats for','calendar'); ?> 
 					<input type="text" name="event_repeats" class="input" size="1" value="<?php echo esc_attr($repeats); ?>" /> 
 					<select name="event_recur" class="input">
-						<option class="input" <?php echo esc_attr($selected_s); ?> value="S"><?php esc_html_e('None') ?></option>
-						<option class="input" <?php echo esc_attr($selected_w); ?> value="W"><?php esc_html_e('Weeks') ?></option>
-						<option class="input" <?php echo esc_attr($selected_m); ?> value="M"><?php esc_html_e('Months (date)') ?></option>
-						<option class="input" <?php echo esc_attr($selected_u); ?> value="U"><?php esc_html_e('Months (day)') ?></option>
-						<option class="input" <?php echo esc_attr($selected_y); ?> value="Y"><?php esc_html_e('Years') ?></option>
+						<option class="input" <?php echo esc_attr($selected_s); ?> value="S"><?php esc_html_e('None','calendar') ?></option>
+						<option class="input" <?php echo esc_attr($selected_w); ?> value="W"><?php esc_html_e('Weeks','calendar') ?></option>
+						<option class="input" <?php echo esc_attr($selected_m); ?> value="M"><?php esc_html_e('Months (date)','calendar') ?></option>
+						<option class="input" <?php echo esc_attr($selected_u); ?> value="U"><?php esc_html_e('Months (day)','calendar') ?></option>
+						<option class="input" <?php echo esc_attr($selected_y); ?> value="Y"><?php esc_html_e('Years','calendar') ?></option>
 					</select><br />
 					<?php esc_html_e('Entering 0 means forever. Where the recurrance interval is left at none, the event will not reoccur.','calendar'); ?>
 				</td>
@@ -881,7 +881,7 @@ function calendar_events_edit_form($mode='add', $event_id=false)
 // to deal with posts
 function calendar_edit()
 {
-    global $current_user, $users_entries;
+    global $current_user, $calendar_users_entries;
 
 // First some quick cleaning up
 $edit = $create = $save = $delete = false;
@@ -889,21 +889,21 @@ $edit = $create = $save = $delete = false;
 // Deal with adding an event to the database
 if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'add' )
 {
-	if (wp_verify_nonce($_POST['_wpnonce'],'calendar-add') == false) {
+	if (!isset($_POST['_wpnonce']) || wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])),'calendar-add') == false) {
 		?>
 		<div class="error"><p><strong><?php esc_html_e('Error','calendar'); ?>:</strong> <?php esc_html_e("Security check failure, try adding the event again",'calendar'); ?></p></div>
 		<?php
 	} else {
 	// Set the variables from source input after nonce verification
-        $title = !empty($_REQUEST['event_title']) ? stripslashes($_REQUEST['event_title']) : '';
-        $desc = !empty($_REQUEST['event_desc']) ? stripslashes($_REQUEST['event_desc']) : '';
-	$begin = !empty($_REQUEST['event_begin']) ? $_REQUEST['event_begin'] : '';
-	$end = !empty($_REQUEST['event_end']) ? $_REQUEST['event_end'] : '';
-	$time = !empty($_REQUEST['event_time']) ? $_REQUEST['event_time'] : '';
-	$recur = !empty($_REQUEST['event_recur']) ? $_REQUEST['event_recur'] : '';
-	$repeats = !empty($_REQUEST['event_repeats']) ? $_REQUEST['event_repeats'] : '';
-	$category = !empty($_REQUEST['event_category']) ? $_REQUEST['event_category'] : '';
-	$linky = !empty($_REQUEST['event_link']) ? $_REQUEST['event_link'] : '';
+        $title = !empty($_REQUEST['event_title']) ? wp_kses_post(wp_unslash($_REQUEST['event_title'])) : '';
+        $desc = !empty($_REQUEST['event_desc']) ? wp_kses_post(wp_unslash($_REQUEST['event_desc'])) : '';
+	$begin = !empty($_REQUEST['event_begin']) ? wp_kses_post(wp_unslash($_REQUEST['event_begin'])) : '';
+	$end = !empty($_REQUEST['event_end']) ? wp_kses_post(wp_unslash($_REQUEST['event_end'])) : '';
+	$time = !empty($_REQUEST['event_time']) ? wp_kses_post(wp_unslash($_REQUEST['event_time'])) : '';
+	$recur = !empty($_REQUEST['event_recur']) ? wp_kses_post(wp_unslash($_REQUEST['event_recur'])) : '';
+	$repeats = !empty($_REQUEST['event_repeats']) ? wp_kses_post(wp_unslash($_REQUEST['event_repeats'])) : '';
+	$category = !empty($_REQUEST['event_category']) ? wp_kses_post(wp_unslash($_REQUEST['event_category'])) : '';
+	$linky = !empty($_REQUEST['event_link']) ? wp_kses_post(wp_unslash($_REQUEST['event_link'])) : '';
         
 	// Perform some validation on the submitted dates - this checks for valid years and months
 	$date_format_one = '/^([0-9]{4})-([0][1-9])-([0-3][0-9])$/';
@@ -1019,7 +1019,7 @@ if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'add' )
 	      }
 	    else
 	      {
-		      do_action('add_calendar_entry', 'add');
+		      do_action('calendar_add_entry', 'add');
 		?>
 		<div class="updated"><p><?php esc_html_e('Event added. It will now show in your calendar.','calendar'); ?></p></div>
 		<?php
@@ -1028,31 +1028,31 @@ if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'add' )
 	else
 	  {
 	    // The form is going to be rejected due to field validation issues, so we preserve the users entries here
-            $users_entries = new stdClass();
-	    $users_entries->event_title = $title;
-	    $users_entries->event_desc = $desc;
-	    $users_entries->event_begin = $begin;
-	    $users_entries->event_end = $end;
-	    $users_entries->event_time = $time;
-	    $users_entries->event_recur = $recur;
-	    $users_entries->event_repeats = $repeats;
-	    $users_entries->event_category = $category;
-	    $users_entries->event_link = $linky;
+            $calendar_users_entries = new stdClass();
+	    $calendar_users_entries->event_title = $title;
+	    $calendar_users_entries->event_desc = $desc;
+	    $calendar_users_entries->event_begin = $begin;
+	    $calendar_users_entries->event_end = $end;
+	    $calendar_users_entries->event_time = $time;
+	    $calendar_users_entries->event_recur = $recur;
+	    $calendar_users_entries->event_repeats = $repeats;
+	    $calendar_users_entries->event_category = $category;
+	    $calendar_users_entries->event_link = $linky;
 	  }
 	}
 }
 // Permit saving of events that have been edited
 else if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'edit_save' )
 {
-	$title = !empty($_REQUEST['event_title']) ? stripslashes($_REQUEST['event_title']) : '';
-	$desc = !empty($_REQUEST['event_desc']) ? stripslashes($_REQUEST['event_desc']) : '';
-	$begin = !empty($_REQUEST['event_begin']) ? $_REQUEST['event_begin'] : '';
-	$end = !empty($_REQUEST['event_end']) ? $_REQUEST['event_end'] : '';
-	$time = !empty($_REQUEST['event_time']) ? $_REQUEST['event_time'] : '';
-	$recur = !empty($_REQUEST['event_recur']) ? $_REQUEST['event_recur'] : '';
-	$repeats = !empty($_REQUEST['event_repeats']) ? $_REQUEST['event_repeats'] : '';
-	$category = !empty($_REQUEST['event_category']) ? $_REQUEST['event_category'] : '';
-	$linky = !empty($_REQUEST['event_link']) ? $_REQUEST['event_link'] : '';
+	$title = !empty($_REQUEST['event_title']) ? wp_kses_post(wp_unslash($_REQUEST['event_title'])) : '';
+	$desc = !empty($_REQUEST['event_desc']) ? wp_kses_post(wp_unslash($_REQUEST['event_desc'])) : '';
+	$begin = !empty($_REQUEST['event_begin']) ? wp_kses_post(wp_unslash($_REQUEST['event_begin'])) : '';
+	$end = !empty($_REQUEST['event_end']) ? wp_kses_post(wp_unslash($_REQUEST['event_end'])) : '';
+	$time = !empty($_REQUEST['event_time']) ? wp_kses_post(wp_unslash($_REQUEST['event_time'])) : '';
+	$recur = !empty($_REQUEST['event_recur']) ? wp_kses_post(wp_unslash($_REQUEST['event_recur'])) : '';
+	$repeats = !empty($_REQUEST['event_repeats']) ? wp_kses_post(wp_unslash($_REQUEST['event_repeats'])) : '';
+	$category = !empty($_REQUEST['event_category']) ? wp_kses_post(wp_unslash($_REQUEST['event_category'])) : '';
+	$linky = !empty($_REQUEST['event_link']) ? wp_kses_post(wp_unslash($_REQUEST['event_link'])) : '';
 	
 	if ( !isset($_REQUEST['event_id']) )
 	{
@@ -1060,7 +1060,7 @@ else if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'edit_save' )
 		<div class="error"><p><strong><?php esc_html_e('Failure','calendar'); ?>:</strong> <?php esc_html_e("You can't update an event if you haven't submitted an event id",'calendar'); ?></p></div>
 		<?php		
 	}
-	elseif (wp_verify_nonce($_POST['_wpnonce'],'calendar-edit_save_'.$_REQUEST['event_id']) == false) {
+	elseif (wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])),'calendar-edit_save_'.sanitize_text_field(wp_unslash($_REQUEST['event_id']))) == false) {
 		?>
 		<div class="error"><p><strong><?php esc_html_e('Error','calendar'); ?>:</strong> <?php esc_html_e("Security check failure, try editing the event again",'calendar'); ?></p></div>
 		<?php
@@ -1171,7 +1171,7 @@ else if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'edit_save' )
 	  if (isset($start_date_ok) && isset($end_date_ok) && isset($time_ok) && isset($url_ok) && isset($title_ok) && isset($recurring_ok))
 	    {
 	    
-	        calendar_db_update_event($title,$desc,$begin,$end,$time_to_use,$recur,$repeats,$current_user->ID,$category,$linky,$_REQUEST['event_id']);
+	        calendar_db_update_event($title,$desc,$begin,$end,$time_to_use,$recur,$repeats,$current_user->ID,$category,$linky,sanitize_text_field(wp_unslash($_REQUEST['event_id'])));
 		$result = calendar_db_get_event_id_by_insert_data($title,$desc,$begin,$end,$time_to_use,$recur,$repeats,$current_user->ID,$category,$linky);
 		
 		if ( empty($result) || empty($result[0]->event_id) )
@@ -1182,7 +1182,7 @@ else if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'edit_save' )
 		}
 		else
 		{
-			do_action('add_calendar_entry', 'edit');
+			do_action('calendar_add_entry', 'edit');
 			?>
 			<div class="updated"><p><?php esc_html_e('Event updated successfully','calendar'); ?></p></div>
 			<?php
@@ -1192,15 +1192,15 @@ else if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'edit_save' )
 	    {
 	      // The form is going to be rejected due to field validation issues, so we preserve the users entries here
               $users_entires = new stdClass();
-              $users_entries->event_title = $title;
-	      $users_entries->event_desc = $desc;
-	      $users_entries->event_begin = $begin;
-	      $users_entries->event_end = $end;
-	      $users_entries->event_time = $time;
-	      $users_entries->event_recur = $recur;
-	      $users_entries->event_repeats = $repeats;
-	      $users_entries->event_category = $category;
-	      $users_entries->event_link = $linky;
+              $calendar_users_entries->event_title = $title;
+	      $calendar_users_entries->event_desc = $desc;
+	      $calendar_users_entries->event_begin = $begin;
+	      $calendar_users_entries->event_end = $end;
+	      $calendar_users_entries->event_time = $time;
+	      $calendar_users_entries->event_recur = $recur;
+	      $calendar_users_entries->event_repeats = $repeats;
+	      $calendar_users_entries->event_category = $category;
+	      $calendar_users_entries->event_link = $linky;
 	      $error_with_saving = 1;
 	    }		
 	}
@@ -1214,19 +1214,19 @@ else if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'delete' )
 		<div class="error"><p><strong><?php esc_html_e('Error','calendar'); ?>:</strong> <?php esc_html_e("You can't delete an event if you haven't submitted an event id",'calendar'); ?></p></div>
 		<?php			
 	}
-	elseif (wp_verify_nonce($_GET['_wpnonce'],'calendar-delete_'.$_REQUEST['event_id']) == false) {
+	elseif (!isset($_GET['_wpnonce']) || wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])),'calendar-delete_'.sanitize_text_field(wp_unslash($_REQUEST['event_id']))) == false) {
 		?>
 		<div class="error"><p><strong><?php esc_html_e('Error','calendar'); ?>:</strong> <?php esc_html_e("Security check failure, try deleting the event again",'calendar'); ?></p></div>
 		<?php
 	}
 	else
 	{
-	        calendar_db_delete_event_by_id($_REQUEST['event_id']);
-	        $result = calendar_db_get_event_id_by_id($_REQUEST['event_id']);
+	        calendar_db_delete_event_by_id(sanitize_text_field(wp_unslash($_REQUEST['event_id'])));
+	        $result = calendar_db_get_event_id_by_id(sanitize_text_field(wp_unslash($_REQUEST['event_id'])));
 		
 		if ( empty($result) || empty($result[0]->event_id) )
 		{
-			do_action('add_calendar_entry', 'delete');
+			do_action('calendar_add_entry', 'delete');
 			?>
 			<div class="updated"><p><?php esc_html_e('Event deleted successfully','calendar'); ?></p></div>
 			<?php
@@ -1258,7 +1258,7 @@ else if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'delete' )
 		}
 		else
 		{
-			calendar_events_edit_form('edit_save', $_REQUEST['event_id']);
+			calendar_events_edit_form('edit_save', sanitize_text_field(wp_unslash($_REQUEST['event_id'])));
 		}	
 	}
 	else
@@ -1281,9 +1281,9 @@ else if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'delete' )
 // Display the admin configuration page
 function calendar_config_edit()
 {
-  global $initial_style;
+  global $calendar_initial_style;
 
-  if (isset($_POST['permissions']) && isset($_POST['style']) && wp_verify_nonce($_POST['_wpnonce'],'calendar-config') == false) {
+  if (isset($_POST['permissions']) && isset($_POST['style']) && (!isset($_POST['_wpnonce']) || wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])),'calendar-config') == false)) {
 		?>
 		<div class="error"><p><strong><?php esc_html_e('Error','calendar'); ?>:</strong> <?php esc_html_e("Security check failure, try editing the config again",'calendar'); ?></p></div>
 		<?php
@@ -1298,10 +1298,10 @@ function calendar_config_edit()
       else { $new_perms = 'manage_options'; }
 
       // We want to sanitize this but the inbuilt function clatters two valid CSS charaters, re-instate them!
-      $calendar_style = str_replace("\'","'",str_replace("&gt;",">",wp_filter_nohtml_kses($_POST['style'])));
-      $display_upcoming_days = $_POST['display_upcoming_days'];
+      $calendar_style = str_replace("\'","'",str_replace("&gt;",">",wp_filter_nohtml_kses(wp_kses_post(wp_unslash($_POST['style'])))));
+      $display_upcoming_days = isset($_POST['display_upcoming_days']) ? sanitize_text_field(wp_unslash($_POST['display_upcoming_days'])) : 7;
 
-      if ($_POST['display_author'] == 'on')
+      if (isset($_POST['display_author']) && $_POST['display_author'] == 'on')
 	      {
 	        $disp_author = 'true';
 	      }
@@ -1310,7 +1310,7 @@ function calendar_config_edit()
 	        $disp_author = 'false';
 	      }
 
-      if ($_POST['display_jump'] == 'on')
+      if (isset($_POST['display_jump']) && $_POST['display_jump'] == 'on')
         {
           $disp_jump = 'true';
         }
@@ -1319,7 +1319,7 @@ function calendar_config_edit()
           $disp_jump = 'false';
         }
 
-      if ($_POST['display_todays'] == 'on')
+      if (isset($_POST['display_todays']) && $_POST['display_todays'] == 'on')
         {
           $disp_todays = 'true';
         }
@@ -1328,7 +1328,7 @@ function calendar_config_edit()
           $disp_todays = 'false';
         }
 
-      if ($_POST['display_upcoming'] == 'on')
+      if (isset($_POST['display_upcoming']) && $_POST['display_upcoming'] == 'on')
         {
           $disp_upcoming = 'true';
         }
@@ -1337,7 +1337,7 @@ function calendar_config_edit()
           $disp_upcoming = 'false';
         }
 
-      if ($_POST['enable_categories'] == 'on')
+      if (isset($_POST['enable_categories']) && $_POST['enable_categories'] == 'on')
         {
           $enable_categories = 'true';
         }
@@ -1346,7 +1346,7 @@ function calendar_config_edit()
 	        $enable_categories = 'false';
         }
 
-      if ($_POST['enable_feed'] == 'on')
+      if (isset($_POST['enable_feed']) && $_POST['enable_feed'] == 'on')
         {
             $enable_feed = 'true';
         }
@@ -1355,13 +1355,13 @@ function calendar_config_edit()
             $enable_feed = 'false';
         }
 
-      if ($_POST['enhance_contrast'] == 'on') {
+      if (isset($_POST['enhance_contrast']) && $_POST['enhance_contrast'] == 'on') {
           $enhance_contrast = 'true';
       } else {
           $enhance_contrast = 'false';
       }
 
-      if ($_POST['show_attribution_link'] == 'on') {
+      if (isset($_POST['show_attribution_link']) && $_POST['show_attribution_link'] == 'on') {
           $show_attribution_link = 'true';
       } else {
           $show_attribution_link = 'false';
@@ -1389,7 +1389,7 @@ function calendar_config_edit()
       // Check to see if we are replacing the original style
       if (isset($_POST['reset_styles'])) {
           if ($_POST['reset_styles'] == 'on') {
-              calendar_update_config_value('calendar_style',$initial_style);
+              calendar_update_config_value('calendar_style',$calendar_initial_style);
           }
       }
 
@@ -1582,31 +1582,33 @@ function calendar_manage_categories()
   // We do some checking to see what we're doing
   if (isset($_POST['mode']) && $_POST['mode'] == 'add')
     {
-      if (wp_verify_nonce($_POST['_wpnonce'],'calendar-category_add') == false) {
+      if (!isset($_POST['_wpnonce']) || wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])),'calendar-category_add') == false) {
         ?>
 	  <div class="error"><p><strong><?php esc_html_e('Error','calendar'); ?>:</strong> <?php esc_html_e("Security check failure, try adding the category again",'calendar'); ?></p></div>
 	<?php
       } else {
       // Proceed with the save
-      calendar_db_insert_category(stripslashes($_POST['category_name']), $_POST['category_colour']);
+      $category_name = isset($_POST['category_name']) ? sanitize_text_field(wp_unslash($_POST['category_name'])) : '';
+      $category_colour = isset($_POST['category_colour']) ? sanitize_text_field(wp_unslash($_POST['category_colour'])) : '';
+      calendar_db_insert_category($category_name, $category_colour);
       echo "<div class=\"updated\"><p><strong>".esc_html__('Category added successfully','calendar')."</strong></p></div>";
       }
     }
   else if (isset($_GET['mode']) && isset($_GET['category_id']) && $_GET['mode'] == 'delete')
     {
-      if (wp_verify_nonce($_GET['_wpnonce'],'calendar-category_delete_'.$_GET['category_id']) == false) {
+      if (!isset($_GET['_wpnonce']) || wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])),'calendar-category_delete_'.sanitize_text_field(wp_unslash($_GET['category_id']))) == false) {
         ?>
 	  <div class="error"><p><strong><?php esc_html_e('Error','calendar'); ?>:</strong> <?php esc_html_e("Security check failure, try deleting the category again",'calendar'); ?></p></div>
 	<?php
       } else {
-        calendar_db_delete_category($_GET['category_id']);
-        calendar_db_reset_event_categories_to_default_from_id($_GET['category_id']);
+        calendar_db_delete_category(sanitize_text_field(wp_unslash($_GET['category_id'])));
+        calendar_db_reset_event_categories_to_default_from_id(sanitize_text_field(wp_unslash($_GET['category_id'])));
         echo "<div class=\"updated\"><p><strong>".esc_html__('Category deleted successfully','calendar')."</strong></p></div>";
       }
     }
   else if (isset($_GET['mode']) && isset($_GET['category_id']) && $_GET['mode'] == 'edit' && !isset($_POST['mode']))
     {
-      $cur_cat = calendar_db_get_category_row_by_id($_GET['category_id']);
+      $cur_cat = calendar_db_get_category_row_by_id(sanitize_text_field(wp_unslash($_GET['category_id'])));
       ?>
 <div class="wrap">
    <h2><?php esc_html_e('Edit Category','calendar'); ?></h2>
@@ -1636,13 +1638,16 @@ function calendar_manage_categories()
     }
   else if (isset($_POST['mode']) && isset($_POST['category_id']) && isset($_POST['category_name']) && isset($_POST['category_colour']) && $_POST['mode'] == 'edit')
     {
-      if (wp_verify_nonce($_POST['_wpnonce'],'calendar-category_edit_'.$_POST['category_id']) == false) {
+      if (!isset($_POST['_wpnonce']) || wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])),'calendar-category_edit_'.sanitize_text_field(wp_unslash($_POST['category_id']))) == false) {
         ?>
 	  <div class="error"><p><strong><?php esc_html_e('Error','calendar'); ?>:</strong> <?php esc_html_e("Security check failure, try editing the category again",'calendar'); ?></p></div>
 	<?php
       } else {
-      // Proceed with the save
-      calendar_db_update_category(stripslashes($_POST['category_name']), $_POST['category_colour'], $_POST['category_id']);
+        // Proceed with the save
+        $category_name = isset($_POST['category_name']) ? sanitize_text_field(wp_unslash($_POST['category_name'])) : '';
+        $category_colour = isset($_POST['category_colour']) ? sanitize_text_field(wp_unslash($_POST['category_colour'])) : '';
+        $category_id = isset($_POST['category_id']) ? sanitize_text_field(wp_unslash($_POST['category_id'])) : 0;
+        calendar_db_update_category($category_name, $category_colour, $category_id);
         echo "<div class=\"updated\"><p><strong>".esc_html__('Category edited successfully','calendar')."</strong></p></div>";
       }
     }
@@ -1857,7 +1862,7 @@ function calendar_upcoming_events($cat_list = '')
       while ($day_count < $future_days+1)
 	{
 	  list($y,$m,$d) = explode("-",gmdate("Y-m-d",mktime($day_count*24,0,0,gmdate("m",calendar_ctwo()),gmdate("d",calendar_ctwo()),gmdate("Y",calendar_ctwo()))));
-	  $events = grab_events($y,$m,$d,'upcoming',$cat_list);
+	  $events = calendar_grab_events($y,$m,$d,'upcoming',$cat_list);
 	  usort($events, "calendar_time_cmp");
 	  if (count($events) != 0) {
 	    $output .= '<li>'.wp_date(get_option('date_format'),mktime($day_count*24,0,0,gmdate("m",calendar_ctwo()),gmdate("d",calendar_ctwo()),gmdate("Y",calendar_ctwo()))).'<ul>';
@@ -1895,7 +1900,7 @@ function calendar_todays_events($cat_list = '')
   if (calendar_get_config_value('display_todays') == 'true')
     {
       $output = '<ul>';
-      $events = grab_events(gmdate("Y",calendar_ctwo()),gmdate("m",calendar_ctwo()),gmdate("d",calendar_ctwo()),'todays',$cat_list);
+      $events = calendar_grab_events(gmdate("Y",calendar_ctwo()),gmdate("m",calendar_ctwo()),gmdate("d",calendar_ctwo()),'todays',$cat_list);
       usort($events, "calendar_time_cmp");
       foreach($events as $event)
 	{
@@ -1934,7 +1939,7 @@ function calendar_draw_events($events)
   foreach($events as $event)
     {
       $output .= '<span class="calendar_bullet" style="position:relative;display:inline;width:unset;background:none;">* </span>'.calendar_draw_event($event).'<br />';
-      $output = apply_filters('modify_drawn_event_content', $output, $event);
+      $output = apply_filters('calendar_modify_drawn_event_content', $output, $event);
     }
   return $output;
 }
@@ -2087,7 +2092,7 @@ function calendar_register_upcoming_widget() {
 }
 
 // A function that determines an appropriate foreground colour from the background
-function getContrastYIQ($hexcolor){
+function calendar_getContrastYIQ($hexcolor){
     if (preg_match('/#([a-fA-F0-9]{3}){1,2}\b/',$hexcolor)) {
         if (strlen($hexcolor)==4) {
             $r = hexdec(str_repeat(substr($hexcolor,1,1),2));
@@ -2123,7 +2128,7 @@ function calendar_draw_event($event)
     {
       $cat_details = calendar_db_get_category_row_by_id($event->event_category);
       if ($contrast == 'true') {
-          $fgcolor=getContrastYIQ($cat_details->category_colour);
+          $fgcolor=calendar_getContrastYIQ($cat_details->category_colour);
           $style = 'style="background-color:'.$cat_details->category_colour.'; color:'.$fgcolor.';"';
       } else {
           $style = 'style="background-color:'.$cat_details->category_colour.';"';
@@ -2149,15 +2154,15 @@ function calendar_draw_event($event)
   if ($event->event_link != '') { $linky = $event->event_link; }
   else { $linky = '#'; }
   
-  $linky = apply_filters('modify_calendar_link', $linky, $event);
+  $linky = apply_filters('calendar_modify_link', $linky, $event);
 
-  $details = '<span class="calnk"><a href="'.$linky.'" '.$style.'>' . $event->event_title . '<span '.$style.'>' . $header_details . '' . $event->event_desc . '</span></a></span>';
+  $details = '<span class="calnk"><a href="'.$linky.'" '.$style.'>' . $event->event_title . '<span '.$style.'>' . $header_details . '' . wp_kses_post($event->event_desc) . '</span></a></span>';
 
   return $details;
 }
 
 // Grab all events for the requested date from calendar
-function grab_events($y,$m,$d,$typing,$cat_list = '')
+function calendar_grab_events($y,$m,$d,$typing,$cat_list = '')
 {
   global $wpdb;
 
@@ -2458,12 +2463,15 @@ function calendar($cat_list = '')
     $date_switcher = calendar_get_config_value('display_jump');
     if ($date_switcher == 'true')
       {
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : ''; 
 	$calendar_body .= '<tr>
         <td colspan="7" class="calendar-date-switcher">
-            <form method="get" action="'.htmlspecialchars($_SERVER['REQUEST_URI']).'">
+            <form method="get" action="'.$request_uri.'">
 ';
 	$qsa = array();
-	parse_str($_SERVER['QUERY_STRING'],$qsa);
+	if (isset($_SERVER['QUERY_STRING'])) {
+	    parse_str(sanitize_text_field(wp_unslash($_SERVER['QUERY_STRING'])),$qsa);
+	}
 	foreach ($qsa as $name => $argument)
 	  {
 	    if ($name != 'calendar_month' && $name != 'calendar_yr' && preg_match("/^[A-Za-z0-9\-\_]+$/",$name) && preg_match("/^[A-Za-z0-9\-\_]+$/",$argument))
@@ -2583,7 +2591,7 @@ function calendar($cat_list = '')
 		if (get_option('start_of_week') == 0)
 		  {
 		    // This bit of code is for styles believe it or not.
-		    $grabbed_events = grab_events($c_year,$c_month,$i,'calendar',$cat_list);
+		    $grabbed_events = calendar_grab_events($c_year,$c_month,$i,'calendar',$cat_list);
 		    $no_events_class = '';
 		    if (!count($grabbed_events))
 		      {
@@ -2594,7 +2602,7 @@ function calendar($cat_list = '')
 		  }
 		else
 		  {
-		    $grabbed_events = grab_events($c_year,$c_month,$i,'calendar',$cat_list);
+		    $grabbed_events = calendar_grab_events($c_year,$c_month,$i,'calendar',$cat_list);
 		    $no_events_class = '';
 	            if (!count($grabbed_events))
 		      {
@@ -2668,7 +2676,7 @@ function calendar_minical_draw_events($events,$day_of_week = '')
         $firstevent = array_shift($arr_values);
         $cat_details = calendar_db_get_category_row_by_id($firstevent->event_category);
         if ($contrast == 'true') {
-            $fgcolor = getContrastYIQ($cat_details->category_colour);
+            $fgcolor = calendar_getContrastYIQ($cat_details->category_colour);
             $style = 'style="background-color:' . $cat_details->category_colour . '; color:' . $fgcolor . '"';
         } else {
             $style = 'style="background-color:' . $cat_details->category_colour . ';"';
@@ -2713,8 +2721,7 @@ function calendar_minical($cat_list = '') {
     }
 
   // Carry on with the script                                                                                                                                                     
-  $name_months = array(1=>__('January','calendar'),__('February','calendar'),__('March','calendar'),__('April','calendar'),__('May','calendar'),__('June','calendar'),__('July','\
-calendar'),__('August','calendar'),__('September','calendar'),__('October','calendar'),__('November','calendar'),__('December','calendar'));
+  $name_months = array(1=>__('January','calendar'),__('February','calendar'),__('March','calendar'),__('April','calendar'),__('May','calendar'),__('June','calendar'),__('July','calendar'),__('August','calendar'),__('September','calendar'),__('October','calendar'),__('November','calendar'),__('December','calendar'));
 
   // If we don't pass arguments we want a calendar that is relevant to today                                                                                                      
   if (empty($get_month) || empty($get_year))
@@ -2845,7 +2852,7 @@ calendar'),__('August','calendar'),__('September','calendar'),__('October','cale
                 if (get_option('start_of_week') == 0)
                   {
                     // This bit of code is for styles believe it or not.
-		    $grabbed_events = grab_events($c_year,$c_month,$i,'calendar',$cat_list);
+		    $grabbed_events = calendar_grab_events($c_year,$c_month,$i,'calendar',$cat_list);
                     $no_events_class = '';
                     if (!count($grabbed_events))
                       {
@@ -2856,7 +2863,7 @@ calendar'),__('August','calendar'),__('September','calendar'),__('October','cale
                   }
                 else
                   {
-                    $grabbed_events = grab_events($c_year,$c_month,$i,'calendar',$cat_list);
+                    $grabbed_events = calendar_grab_events($c_year,$c_month,$i,'calendar',$cat_list);
                     $no_events_class = '';
                     if (!count($grabbed_events))
                       {

@@ -3,8 +3,8 @@ Contributors: KieranOShea
 Donate link: http://www.kieranoshea.com
 Tags: calendar, dates, times, events
 Requires at least: 6.2.4
-Tested up to: 6.6
-Stable tag: 1.3.16
+Tested up to: 6.9
+Stable tag: 1.3.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -239,6 +239,16 @@ You've not called wp_head() in your theme's header and/or wp_footer() in your th
 5. The options screen of Calendar
 
 == Changelog ==
+
+= 1.3.17 =
+*   Fixed CVE-2025-14548
+*   Checked compatibility with WordPress 6.9
+*   Corrected missing domain on some i18n calls
+*   Updated POT file for translations
+*   Achieved green check on latest Plugin Check version (1.7)
+*   Hook add_calendar_entry renamed to calendar_add_entry for compatibility with other plugins
+*   Filter modify_drawn_event_content renamed to calendar modify_drawn_event_content to avoid clashes with other plugins
+*   Filter modify_calendar_link renamed to calendar_modify_link to avoid clashes with other plugins
 
 = 1.3.16 =
 *   Fixed error on event save for some users; Attempt to assign property "event_title" on null

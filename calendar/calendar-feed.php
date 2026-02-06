@@ -21,6 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 // Should we allow the feed to go out?
 if (calendar_get_config_value('enable_feed') == 'true') {
+    calendar_print_ical_feed();
+}
+
+function calendar_print_ical_feed() {
   // Output the headers
   header("Content-type: text/calendar", true);
   header('Content-Disposition: attachment; filename="calendar.ics"');
@@ -68,12 +72,17 @@ END:VTIMEZONE
         $start = gmdate('Ymd',mktime($day_count*24,0,0,gmdate("m"),gmdate("d"),gmdate("Y")))."T".gmdate('His',strtotime($event->event_time)).$utc_tail;
         $end = gmdate('Ymd',mktime($day_count*24,0,0,gmdate("m"),gmdate("d"),gmdate("Y")))."T".gmdate('His',strtotime($event->event_time)+3600).$utc_tail;
       }
+      if (isset($_SERVER['SERVER_NAME'])) {
+          $server_name = sanitize_text_field(wp_unslash($_SERVER['SERVER_NAME']));
+      } else {
+          $server_name = 'localhost';
+      }
       echo "BEGIN:VEVENT
 DTSTART".esc_html($tz_prefix).":".esc_html($start)."
 DTEND".esc_html($tz_prefix).":".esc_html($end)."
 SUMMARY:".esc_html($event->event_title)."
 DESCRIPTION:".esc_html($event->event_desc)."
-UID:eventId=".esc_html($event->event_id)."eventInstance=".esc_html($day_count)."@".esc_html($_SERVER['SERVER_NAME'])."
+UID:eventId=".esc_html($event->event_id)."eventInstance=".esc_html($day_count)."@".esc_attr($server_name)."
 SEQUENCE:0
 DTSTAMP:".esc_html(gmdate("Ymd\THis\Z"))."
 END:VEVENT
