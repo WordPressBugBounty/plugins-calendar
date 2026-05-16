@@ -7,7 +7,7 @@ Author: Kieran O'Shea
 Author URI: http://www.kieranoshea.com
 Text Domain: calendar
 Domain Path: /languages
-Version: 1.3.17
+Version: 1.3.18
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 */
@@ -2156,7 +2156,7 @@ function calendar_draw_event($event)
   
   $linky = apply_filters('calendar_modify_link', $linky, $event);
 
-  $details = '<span class="calnk"><a href="'.$linky.'" '.$style.'>' . $event->event_title . '<span '.$style.'>' . $header_details . '' . wp_kses_post($event->event_desc) . '</span></a></span>';
+  $details = '<span class="calnk"><a href="'.esc_url($linky).'" '.$style.'>' . $event->event_title . '<span '.$style.'>' . $header_details . '' . wp_kses_post($event->event_desc) . '</span></a></span>';
 
   return $details;
 }

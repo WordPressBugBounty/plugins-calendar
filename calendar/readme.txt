@@ -3,8 +3,8 @@ Contributors: KieranOShea
 Donate link: http://www.kieranoshea.com
 Tags: calendar, dates, times, events
 Requires at least: 6.2.4
-Tested up to: 6.9
-Stable tag: 1.3.17
+Tested up to: 6.9.4
+Stable tag: 1.3.18
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -239,6 +239,9 @@ You've not called wp_head() in your theme's header and/or wp_footer() in your th
 5. The options screen of Calendar
 
 == Changelog ==
+
+= 1.3.18 =
+*   Fixed XSS issue with event link
 
 = 1.3.17 =
 *   Fixed CVE-2025-14548
